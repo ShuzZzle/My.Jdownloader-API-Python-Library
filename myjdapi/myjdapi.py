@@ -3,16 +3,19 @@ import hashlib
 import hmac
 import json
 import time
+
 try:
     # from urllib.request import urlopen
     from urllib.parse import quote
-except:                         #For Python 2
+except:  # For Python 2
     from urllib import quote
     # from urllib import urlopen
 import base64
 import requests
 from Crypto.Cipher import AES
+
 BS = 16
+
 
 class MYJDException(BaseException):
     pass
@@ -21,19 +24,22 @@ class MYJDException(BaseException):
 def PAD(s):
     try:
         return s + ((BS - len(s) % BS) * chr(BS - len(s) % BS)).encode()
-    except:                     # For python 2
+    except:  # For python 2
         return s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
 
-def UNPAD(s):
+
+def unpad(s):
     try:
         return s[0:-s[-1]]
-    except:                     # For python 2
+    except:  # For python 2
         return s[0:-ord(s[-1])]
+
 
 class System:
     """
     Class that represents the system-functionality of a Device
     """
+
     def __init__(self, device):
         self.device = device
         self.url = '/system'
@@ -79,11 +85,13 @@ class System:
         """
         resp = self.device.action(self.url + "/standbyOS")
         return resp
-		
+
+
 class Update:
     """
     Class that represents the update-functionality of a Device
     """
+
     def __init__(self, device):
         self.device = device
         self.url = '/update'
@@ -111,11 +119,13 @@ class Update:
         """
         resp = self.device.action(self.url + "/isUpdateAvailable")
         return resp
-		
+
+
 class DownloadController:
     """
     Class that represents the download-controller of a Device
     """
+
     def __init__(self, device):
         self.device = device
         self.url = '/downloadcontroller'
@@ -125,7 +135,7 @@ class DownloadController:
 
         :return:
         """
-        resp = self.device.action(self.url+"/start")
+        resp = self.device.action(self.url + "/start")
         return resp
 
     def stop_downloads(self):
@@ -170,10 +180,12 @@ class DownloadController:
         resp = self.device.action(self.url + "/getCurrentState")
         return resp
 
+
 class Linkgrabber:
     """
     Class that represents the linkgrabber of a Device
     """
+
     def __init__(self, device):
         self.device = device
         self.url = '/linkgrabberv2'
@@ -182,7 +194,7 @@ class Linkgrabber:
         """
         Clears Linkgrabbers list
         """
-        resp = self.device.action(self.url+"/clearList", http_action="POST")
+        resp = self.device.action(self.url + "/clearList", http_action="POST")
         return resp
 
     def move_to_downloadlist(self, links_ids, packages_ids):
@@ -193,27 +205,27 @@ class Linkgrabber:
         :type: list of strings.
         :param links: Links UUID.
         """
-        params = [links_ids,packages_ids]
-        resp = self.device.action(self.url+"/moveToDownloadlist", params)
+        params = [links_ids, packages_ids]
+        resp = self.device.action(self.url + "/moveToDownloadlist", params)
         return resp
 
     def query_links(self, params=[
-            {
-                "bytesTotal"    : True,
-                "comment"       : True,
-                "status"        : True,
-                "enabled"       : True,
-                "maxResults"    : -1,
-                "startAt"       : 0,
-                "hosts"         : True,
-                "url"           : True,
-                "availability"  : True,
-                "variantIcon"   : True,
-                "variantName"   : True,
-                "variantID"     : True,
-                "variants"      : True,
-                "priority"      : True
-            }]):
+        {
+            "bytesTotal": True,
+            "comment": True,
+            "status": True,
+            "enabled": True,
+            "maxResults": -1,
+            "startAt": 0,
+            "hosts": True,
+            "url": True,
+            "availability": True,
+            "variantIcon": True,
+            "variantName": True,
+            "variantID": True,
+            "variants": True,
+            "priority": True
+        }]):
         """
 
         Get the links in the linkcollector/linkgrabber
@@ -255,10 +267,15 @@ class Linkgrabber:
             'variants': True
             }, ... ]
         """
-        resp = self.device.action(self.url+"/queryLinks", params)
+        resp = self.device.action(self.url + "/queryLinks", params)
         return resp
 
-    def cleanup(self,  action, mode, selection_type, links_ids=[], packages_ids=[] ):
+    def cleanup(self, action, mode, selection_type, links_ids=None, packages_ids=None):
+        if links_ids is None:
+            links_ids = []
+        if packages_ids is None:
+            packages_ids = []
+
         """
         Clean packages and/or links of the linkgrabber list.
         Requires at least a packages_ids or links_ids list, or both.
@@ -274,9 +291,9 @@ class Linkgrabber:
         :param selection_type: Type of selection to use. Types: SELECTED, UNSELECTED, ALL, NONE
         :type: str:
         """
-        params = [links_ids,packages_ids]
-        params += [action,mode,selection_type]
-        resp = self.device.action(self.url+"/cleanup", params)
+        params = [links_ids, packages_ids]
+        params += [action, mode, selection_type]
+        resp = self.device.action(self.url + "/cleanup", params)
         return resp
 
     def add_container(self, type_, content):
@@ -290,13 +307,15 @@ class Linkgrabber:
 
         """
         params = [type_, content]
-        resp = self.device.action(self.url+"/addContainer", params)
+        resp = self.device.action(self.url + "/addContainer", params)
         return resp
 
     def get_download_urls(self, links_ids, packages_ids, url_display_type):
         """
         Gets download urls from Linkgrabber.
 
+        :param links_ids:
+        :return:
         :param packages_ids: Packages UUID.
         :type: List of strings.
         :param Links_ids: Links UUID.
@@ -305,10 +324,10 @@ class Linkgrabber:
         :type: Dictionary
         """
         params = [packages_ids, links_ids, url_display_type]
-        resp = self.device.action(self.url+"/getDownloadUrls", params)
+        resp = self.device.action(self.url + "/getDownloadUrls", params)
         return resp
 
-    def set_priority(self, priority, links_ids, packages_ids ):
+    def set_priority(self, priority, links_ids, packages_ids):
         """
         Sets the priority of links or packages.
 
@@ -320,10 +339,10 @@ class Linkgrabber:
         :type: str:
         """
         params = [priority, links_ids, packages_ids]
-        resp = self.device.action(self.url+"/setPriority", params)
+        resp = self.device.action(self.url + "/setPriority", params)
         return resp
 
-    def set_enabled(self, ):
+    def set_enabled(self, params):
         """
 
         My guess is that it Enables/Disables a download, but i haven't got it working.
@@ -335,7 +354,7 @@ class Linkgrabber:
         :rtype:
 
         """
-        resp = self.device.action(self.url+"/setEnabled", params)
+        resp = self.device.action(self.url + "/setEnabled", params)
         return resp
 
     def get_variants(self, params):
@@ -351,20 +370,20 @@ class Linkgrabber:
         'M4A_256', 'name': '256kbit/s M4A-Audio'}, {'id': 'AAC_256', 'name':
         '256kbit/s AAC-Audio'},.......]
         """
-        resp = self.device.action(self.url+"/getVariants", params)
+        resp = self.device.action(self.url + "/getVariants", params)
         return resp
 
     def add_links(self, params=[
-            {
-                "autostart" : False,
-                "links" : None,
-                "packageName" : None,
-                "extractPassword" : None,
-                "priority" : "DEFAULT",
-                "downloadPassword" : None,
-                "destinationFolder" : None,
-                "overwritePackagizerRules" : False
-            }]):
+        {
+            "autostart": False,
+            "links": None,
+            "packageName": None,
+            "extractPassword": None,
+            "priority": "DEFAULT",
+            "downloadPassword": None,
+            "destinationFolder": None,
+            "overwritePackagizerRules": False
+        }]):
         """
         Add links to the linkcollector
 
@@ -406,7 +425,7 @@ class Linkgrabber:
         """
         It returns the API help.
         """
-        resp = self.device.action("/linkgrabberv2/help",http_action="GET")
+        resp = self.device.action("/linkgrabberv2/help", http_action="GET")
         return resp
 
     def rename_link(self):
@@ -465,65 +484,71 @@ class Linkgrabber:
         """
         pass
 
+
 class Downloads:
     """
     Class that represents the downloads list of a Device
     """
+
     def __init__(self, device):
         self.device = device
         self.url = "/downloadsV2"
 
-    def query_links(self, params=[
-            {
-                "bytesTotal" : True,
-                "comment" : True,
-                "status" : True,
-                "enabled" : True,
-                "maxResults" : -1,
-                "startAt" : 0,
-                "packageUUIDs" : [],
-                "host" : True,
-                "url" : True,
-                "bytesloaded" : True,
-                "speed" : True,
-                "eta" : True,
-                "finished" : True,
-                "priority" : True,
-                "running" : True,
-                "skipped" : True,
-                "extractionStatus" : True
-            }]):
+    def query_links(self, params=None):
         """
         Get the links in the download list
         """
-        resp = self.device.action(self.url+"/queryLinks", params)
+        if params is None:
+            params = [
+                {
+                    "bytesTotal": True,
+                    "comment": True,
+                    "status": True,
+                    "enabled": True,
+                    "maxResults": -1,
+                    "startAt": 0,
+                    "packageUUIDs": [],
+                    "host": True,
+                    "url": True,
+                    "bytesloaded": True,
+                    "speed": True,
+                    "eta": True,
+                    "finished": True,
+                    "priority": True,
+                    "running": True,
+                    "skipped": True,
+                    "extractionStatus": True
+                }]
+        resp = self.device.action(self.url + "/queryLinks", params)
         return resp
 
-    def query_packages(self, params=[
-            {
-                "bytesLoaded" : True,
-                "bytesTotal" : True,
-                "comment" : True,
-                "enabled" : True,
-                "eta" : True,
-                "priority" : True,
-                "finished" : True,
-                "running" : True,
-                "speed" : True,
-                "status" : True,
-                "childCount" : True,
-                "hosts" : True,
-                "saveTo" : True,
-                "maxResults" : -1,
-                "startAt" : 0,
-            }]):
+    def query_packages(self, params=None):
         """
         Get the packages in the download list
         """
-        resp = self.device.action(self.url+"/queryPackages", params)
+        if params is None:
+            params = [
+                {
+                    "bytesLoaded": True,
+                    "bytesTotal": True,
+                    "comment": True,
+                    "enabled": True,
+                    "eta": True,
+                    "priority": True,
+                    "finished": True,
+                    "running": True,
+                    "speed": True,
+                    "status": True,
+                    "childCount": True,
+                    "hosts": True,
+                    "saveTo": True,
+                    "maxResults": -1,
+                    "startAt": 0,
+                }]
+        resp = self.device.action(self.url + "/queryPackages", params)
         return resp
 
-    def cleanup(self,  action, mode, selection_type, links_ids=[], packages_ids=[] ):
+    def cleanup(self, action, mode, selection_type, links_ids=None, packages_ids=None):
         """
         Clean packages and/or links of the linkgrabber list.
         Requires at least a packages_ids or links_ids list, or both.
@@ -539,15 +564,21 @@ class Downloads:
         :param selection_type: Type of selection to use. Types: SELECTED, UNSELECTED, ALL, NONE
         :type: str:
         """
-        params = [links_ids,packages_ids]
-        params += [action,mode,selection_type]
-        resp = self.device.action(self.url+"/cleanup", params)
+        if packages_ids is None:
+            packages_ids = []
+        if links_ids is None:
+            links_ids = []
+        params = [links_ids, packages_ids]
+        params += [action, mode, selection_type]
+        resp = self.device.action(self.url + "/cleanup", params)
         return resp
 
-class Jddevice:
+
+class JDDevice:
     """
     Class that represents a JDownloader device and it's functions
     """
+
     def __init__(self, jd, device_dict):
         """ This functions initializates the device instance.
         It uses the provided dictionary to create the device.
@@ -569,6 +600,7 @@ class Jddevice:
         All the info of which params are required and what are they default value, type,etc
         can be found in the MY.Jdownloader API Specifications ( https://goo.gl/pkJ9d1 ).
 
+        :param http_action:
         :param params: Params in the url, in a list of tuples. Example:
         /example?param1=ex&param2=ex2 [("param1","ex"),("param2","ex2")]
         :param postparams: List of Params that are send in the post.
@@ -580,19 +612,21 @@ class Jddevice:
         return response['data']
 
     def __action_url(self):
-        return "/t_"+self.myjd.get_session_token()+"_"+self.device_id
+        return "/t_" + self.myjd.get_session_token() + "_" + self.device_id
 
-class Myjdapi:
+
+class MyJDAPI:
     """
     Main class for connecting to JD API.
 
     """
+
     def __init__(self):
         """
         This functions initializates the myjdapi object.
 
         """
-        self.__request_id = int(time.time()*1000)
+        self.__request_id = int(time.time() * 1000)
         self.__api_url = "http://api.jdownloader.org"
         self.__app_key = "http://git.io/vmcsk"
         self.__api_version = 1
@@ -632,7 +666,7 @@ class Myjdapi:
         """
         secret_hash = hashlib.sha256()
         secret_hash.update(email.lower().encode('utf-8') + password.encode('utf-8') + \
-                    domain.lower().encode('utf-8'))
+                           domain.lower().encode('utf-8'))
         return secret_hash.digest()
 
     def __update_encryption_tokens(self):
@@ -648,10 +682,10 @@ class Myjdapi:
         new_token.update(old_token + bytearray.fromhex(self.__session_token))
         self.__server_encryption_token = new_token.digest()
         new_token = hashlib.sha256()
-        new_token.update(self.__device_secret+bytearray.fromhex(self.__session_token))
+        new_token.update(self.__device_secret + bytearray.fromhex(self.__session_token))
         self.__device_encryption_token = new_token.digest()
 
-    def __signature_create(self,key,data):
+    def __signature_create(self, key, data):
         """
         Calculates the signature for the data given a key.
 
@@ -661,20 +695,20 @@ class Myjdapi:
         signature = hmac.new(key, data.encode('utf-8'), hashlib.sha256)
         return signature.hexdigest()
 
-    def __decrypt(self,secret_token,data):
+    def __decrypt(self, secret_token, data):
         """
         Decrypts the data from the server using the provided token
 
         :param secret_token:
         :param data:
         """
-        init_vector = secret_token[:len(secret_token)//2]
-        key = secret_token[len(secret_token)//2:]
+        init_vector = secret_token[:len(secret_token) // 2]
+        key = secret_token[len(secret_token) // 2:]
         decryptor = AES.new(key, AES.MODE_CBC, init_vector)
-        decrypted_data = UNPAD(decryptor.decrypt(base64.b64decode(data)))
+        decrypted_data = unpad(decryptor.decrypt(base64.b64decode(data)))
         return decrypted_data
 
-    def __encrypt(self,secret_token,data):
+    def __encrypt(self, secret_token, data):
         """
         Encrypts the data from the server using the provided token
 
@@ -682,8 +716,8 @@ class Myjdapi:
         :param data:
         """
         data = PAD(data.encode('utf-8'))
-        init_vector = secret_token[:len(secret_token)//2]
-        key = secret_token[len(secret_token)//2:]
+        init_vector = secret_token[:len(secret_token) // 2]
+        key = secret_token[len(secret_token) // 2:]
         encryptor = AES.new(key, AES.MODE_CBC, init_vector)
         encrypted_data = base64.b64encode(encryptor.encrypt(data))
         return encrypted_data.decode('utf-8')
@@ -704,7 +738,7 @@ class Myjdapi:
         """
         self.__login_secret = self.__secret_create(email, password, "server")
         self.__device_secret = self.__secret_create(email, password, "device")
-        response = self.request_api("/my/connect", "GET",[("email", email), ("appkey", self.__app_key)])
+        response = self.request_api("/my/connect", "GET", [("email", email), ("appkey", self.__app_key)])
         self.__connected = True
         self.update_request_id()
         self.__session_token = response["sessiontoken"]
@@ -719,7 +753,8 @@ class Myjdapi:
         :returns: boolean -- True if successful, False if there was any error.
 
         """
-        response = self.request_api("/my/reconnect", "GET",[("sessiontoken", self.__session_token), ("regaintoken", self.__regain_token)])
+        response = self.request_api("/my/reconnect", "GET",
+                                    [("sessiontoken", self.__session_token), ("regaintoken", self.__regain_token)])
         self.update_request_id()
         self.__session_token = response["sessiontoken"]
         self.__regain_token = response["regaintoken"]
@@ -749,7 +784,7 @@ class Myjdapi:
 
         :returns: boolean -- True if successful, False if there was any error.
         """
-        response = self.request_api("/my/listdevices", "GET",[("sessiontoken",self.__session_token)])
+        response = self.request_api("/my/listdevices", "GET", [("sessiontoken", self.__session_token)])
         self.update_request_id()
         self.__devices = response["list"]
 
@@ -772,21 +807,23 @@ class Myjdapi:
         """
         Returns a jddevice instance of the device
 
+        :param device_id:
+        :param device_name:
         :param deviceid:
         """
-        if not self.is_connected() :
-            raise(MYJDException("No connection established\n"))
+        if not self.is_connected():
+            raise (MYJDException("No connection established\n"))
         if device_id is not None:
             for device in self.__devices:
                 if device["id"] == device_id:
-                    return Jddevice(self, device)
+                    return JDDevice(self, device)
         elif device_name is not None:
             for device in self.__devices:
                 if device["name"] == device_name:
-                    return Jddevice(self, device)
-        raise(MYJDException("Device not found\n"))
+                    return JDDevice(self, device)
+        raise (MYJDException("Device not found\n"))
 
-    def request_api(self, path, http_method="GET",params=None, action=None):
+    def request_api(self, path, http_method="GET", params=None, action=None):
         """
         Makes a request to the API to the 'path' using the 'http_method' with parameters,'params'.
         Ex:
@@ -798,7 +835,7 @@ class Myjdapi:
         """
         data = None
         if not self.is_connected() and path != "/my/connect":
-            raise(MYJDException("No connection established\n"))
+            raise (MYJDException("No connection established\n"))
         if http_method == "GET":
             query = [path + "?"]
             for param in params:
@@ -806,42 +843,45 @@ class Myjdapi:
                     query += ["%s=%s" % (param[0], quote(param[1]))]
                 else:
                     query += ["&%s=%s" % (param[0], param[1])]
-            query += ["rid="+str(self.__request_id)]
+            query += ["rid=" + str(self.__request_id)]
             if self.__server_encryption_token is None:
-                query += ["signature=" + \
-                          str(self.__signature_create(self.__login_secret, query[0]+"&".join(query[1:])))]
+                query += ["signature=" +
+                          str(self.__signature_create(self.__login_secret, query[0] + "&".join(query[1:])))]
             else:
-                query += ["signature=" + \
-                          str(self.__signature_create(self.__server_encryption_token, query[0]+"&".join(query[1:])))]
-            query = query[0]+"&".join(query[1:])
-            encrypted_response = requests.get(self.__api_url+query)
+                query += ["signature=" +
+                          str(self.__signature_create(self.__server_encryption_token, query[0] + "&".join(query[1:])))]
+            query = query[0] + "&".join(query[1:])
+            encrypted_response = requests.get(self.__api_url + query)
         else:
-            params_request=[]
+            params_request = []
             for param in params:
-                if not isinstance(param,list):
+                if not isinstance(param, list):
                     # params_request+=[str(param).replace("'",'\"').replace("True","true").replace("False","false").replace('None',"null")]
-                    params_request+=[json.dumps(param)]
+                    params_request += [json.dumps(param)]
                 else:
-                    params_request+=[param]
-            params_request = {"apiVer": self.__api_version, "url" : path, "params":params_request, "rid":self.__request_id}
-            data = json.dumps(params_request).replace('"null"',"null").replace("'null'","null")
-            encrypted_data = self.__encrypt(self.__device_encryption_token,data)
+                    params_request += [param]
+            params_request = {"apiVer": self.__api_version, "url": path, "params": params_request,
+                              "rid": self.__request_id}
+            data = json.dumps(params_request).replace('"null"', "null").replace("'null'", "null")
+            encrypted_data = self.__encrypt(self.__device_encryption_token, data)
             if action is not None:
-                request_url=self.__api_url+action+path
+                request_url = self.__api_url + action + path
             else:
-                request_url=self.__api_url+path
-            encrypted_response = requests.post(request_url,headers={"Content-Type": "application/aesjson-jd; charset=utf-8"},data=encrypted_data)
+                request_url = self.__api_url + path
+            encrypted_response = requests.post(request_url,
+                                               headers={"Content-Type": "application/aesjson-jd; charset=utf-8"},
+                                               data=encrypted_data)
         if encrypted_response.status_code != 200:
-            error_msg=json.loads(encrypted_response.text)
-            msg="\n\tSOURCE: "+error_msg["src"]+"\n\tTYPE: "+ \
-                                error_msg["type"]+"\n------\nREQUEST_URL: "+ \
-                                self.__api_url+path
+            error_msg = json.loads(encrypted_response.text)
+            msg = "\n\tSOURCE: " + error_msg["src"] + "\n\tTYPE: " + \
+                  error_msg["type"] + "\n------\nREQUEST_URL: " + \
+                  self.__api_url + path
             if http_method == "GET":
-                msg+=query
-            msg+="\n"
+                msg += query
+            msg += "\n"
             if data is not None:
-                msg+="DATA:\n"+data
-            raise(MYJDException(msg))
+                msg += "DATA:\n" + data
+            raise (MYJDException(msg))
         if action is None:
             if not self.__server_encryption_token:
                 response = self.__decrypt(self.__login_secret, encrypted_response.text)
@@ -851,7 +891,7 @@ class Myjdapi:
             if params is not None:
                 response = self.__decrypt(self.__device_encryption_token, encrypted_response.text)
             else:
-                return {"data" : response}
+                return {"data": response}
         jsondata = json.loads(response.decode('utf-8'))
         if jsondata['rid'] != self.__request_id:
             self.update_request_id()
