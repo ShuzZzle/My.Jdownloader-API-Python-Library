@@ -14,6 +14,7 @@ import base64
 import requests
 from Crypto.Cipher import AES
 
+
 BS = 16
 
 
@@ -201,31 +202,14 @@ class Linkgrabber:
         """
         Moves packages and/or links to download list.
 
-        :param packages: Packages UUID.
-        :type: list of strings.
-        :param links: Links UUID.
+        :param packages_ids:
+        :param links_ids:
         """
         params = [links_ids, packages_ids]
         resp = self.device.action(self.url + "/moveToDownloadlist", params)
         return resp
 
-    def query_links(self, params=[
-        {
-            "bytesTotal": True,
-            "comment": True,
-            "status": True,
-            "enabled": True,
-            "maxResults": -1,
-            "startAt": 0,
-            "hosts": True,
-            "url": True,
-            "availability": True,
-            "variantIcon": True,
-            "variantName": True,
-            "variantID": True,
-            "variants": True,
-            "priority": True
-        }]):
+    def query_links(self, params=None):
         """
 
         Get the links in the linkcollector/linkgrabber
@@ -267,6 +251,24 @@ class Linkgrabber:
             'variants': True
             }, ... ]
         """
+        if params is None:
+            params = [
+                {
+                    "bytesTotal": True,
+                    "comment": True,
+                    "status": True,
+                    "enabled": True,
+                    "maxResults": -1,
+                    "startAt": 0,
+                    "hosts": True,
+                    "url": True,
+                    "availability": True,
+                    "variantIcon": True,
+                    "variantName": True,
+                    "variantID": True,
+                    "variants": True,
+                    "priority": True
+                }]
         resp = self.device.action(self.url + "/queryLinks", params)
         return resp
 
@@ -373,17 +375,7 @@ class Linkgrabber:
         resp = self.device.action(self.url + "/getVariants", params)
         return resp
 
-    def add_links(self, params=[
-        {
-            "autostart": False,
-            "links": None,
-            "packageName": None,
-            "extractPassword": None,
-            "priority": "DEFAULT",
-            "downloadPassword": None,
-            "destinationFolder": None,
-            "overwritePackagizerRules": False
-        }]):
+    def add_links(self, package_name=None, links=None, params=None):
         """
         Add links to the linkcollector
 
@@ -397,6 +389,19 @@ class Linkgrabber:
         "destinationFolder" : null
         }
         """
+        if params is None:
+            params = [
+                {
+                    "autostart": False,
+                    "links": links,
+                    "packageName": package_name,
+                    "extractPassword": None,
+                    "priority": "DEFAULT",
+                    "downloadPassword": None,
+                    "destinationFolder": None,
+                    "overwritePackagizerRules": False
+                }]
+        print params
         resp = self.device.action("/linkgrabberv2/addLinks", params)
         return resp
 
@@ -574,6 +579,38 @@ class Downloads:
         return resp
 
 
+class Captcha:
+    """
+    Class that represents the challenge aka. Captcha
+    """
+
+    def __init__(self, device):
+        self.device = device
+        self.url = "/captcha"
+
+    def list(self):
+        captcha_job_list = self.device.action(self.url + "/list", http_action="GET")
+        return captcha_job_list
+
+    def get_captcha_job(self, captcha_id):
+        params = [captcha_id]
+        captcha_job = self.device.action(self.url + "/getCaptchaJob", params)
+        return captcha_job
+
+    def get_captcha(self):
+        captcha = self.device.action(self.url + "/getCaptcha", http_action="GET")
+        return captcha
+
+    def get(self, captcha_id):
+        params = [captcha_id]
+        captcha_url = self.device.action(self.url + "/get", params)
+        return base64.b64decode(captcha_url)
+
+    def solve(self, captcha_id, captcha_password):
+        params = [captcha_id, captcha_password]
+        self.device.action(self.url + "/solve", params)
+
+
 class JDDevice:
     """
     Class that represents a JDownloader device and it's functions
@@ -594,12 +631,14 @@ class JDDevice:
         self.downloadcontroller = DownloadController(self)
         self.update = Update(self)
         self.system = System(self)
+        self.captcha = Captcha(self)
 
     def action(self, path, params=(), http_action="POST"):
         """Execute any action in the device using the postparams and params.
         All the info of which params are required and what are they default value, type,etc
         can be found in the MY.Jdownloader API Specifications ( https://goo.gl/pkJ9d1 ).
 
+        :param path:
         :param http_action:
         :param params: Params in the url, in a list of tuples. Example:
         /example?param1=ex&param2=ex2 [("param1","ex"),("param2","ex2")]
@@ -665,7 +704,7 @@ class MyJDAPI:
 
         """
         secret_hash = hashlib.sha256()
-        secret_hash.update(email.lower().encode('utf-8') + password.encode('utf-8') + \
+        secret_hash.update(email.lower().encode('utf-8') + password.encode('utf-8') +
                            domain.lower().encode('utf-8'))
         return secret_hash.digest()
 
