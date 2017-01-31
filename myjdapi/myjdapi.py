@@ -14,7 +14,6 @@ import base64
 import requests
 from Crypto.Cipher import AES
 
-
 BS = 16
 
 
@@ -389,6 +388,11 @@ class Linkgrabber:
         "destinationFolder" : null
         }
         """
+        from Structs.AddLinksQueryStorable import AddLinksQueryStorable
+        my_struct = AddLinksQueryStorable(deepDecrypt=True, packageName="YOLO")
+        # var = my_struct.packageName
+        print my_struct.to_dict()
+
         if params is None:
             params = [
                 {
@@ -596,6 +600,13 @@ class Captcha:
         params = [captcha_id]
         captcha_job = self.device.action(self.url + "/getCaptchaJob", params)
         return captcha_job
+
+    def skip(self, captcha_id, skip_request=None):
+        if skip_request is None:
+            params = [captcha_id]
+        else:
+            params = [captcha_id, skip_request]
+        self.device.action(self.url + "/skip", params)
 
     def get_captcha(self):
         captcha = self.device.action(self.url + "/getCaptcha", http_action="GET")
