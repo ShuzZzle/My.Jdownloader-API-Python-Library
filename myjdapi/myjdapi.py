@@ -388,10 +388,10 @@ class Linkgrabber:
         "destinationFolder" : null
         }
         """
-        from Structs.AddLinksQueryStorable import AddLinksQueryStorable
-        my_struct = AddLinksQueryStorable(deepDecrypt=True, packageName="YOLO")
+        # from Structs.AddLinksQueryStorable import AddLinksQueryStorable
+        # my_struct = AddLinksQueryStorable(deepDecrypt=True, packageName="YOLO")
         # var = my_struct.packageName
-        print my_struct.to_dict()
+        # print my_struct.to_dict()
 
         if params is None:
             params = [
